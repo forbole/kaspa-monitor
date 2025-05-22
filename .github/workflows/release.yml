@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: kaspa-monitor-linux-x86_64
+            target: x86_64-unknown-linux-gnu
+            binary_path: target/x86_64-unknown-linux-gnu/release/kaspa-monitor
+            asset_name: kaspa-monitor-linux-x86_64
+          - os: macos-latest
+            artifact_name: kaspa-monitor-macos-x86_64
+            target: x86_64-apple-darwin
+            binary_path: target/x86_64-apple-darwin/release/kaspa-monitor
+            asset_name: kaspa-monitor-macos-x86_64
+          - os: windows-latest
+            artifact_name: kaspa-monitor-windows-x86_64
+            target: x86_64-pc-windows-msvc
+            binary_path: target/x86_64-pc-windows-msvc/release/kaspa-monitor.exe
+            asset_name: kaspa-monitor-windows-x86_64.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+        
+      - name: Rename binary file
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp ${{ matrix.binary_path }} kaspa-monitor-${{ github.ref_name }}-${{ matrix.asset_name }}
+          else
+            cp ${{ matrix.binary_path }} kaspa-monitor-${{ github.ref_name }}-${{ matrix.asset_name }}
+          fi
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: kaspa-monitor-${{ github.ref_name }}-${{ matrix.asset_name }}
+          name: Kaspa Monitor ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
