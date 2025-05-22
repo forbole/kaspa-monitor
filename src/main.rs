@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "Kaspa Node Benchmarking Tool", long_about = None)]
+#[command(author, version, about = "Kaspa Node Monitoring Tool", long_about = None)]
 #[command(next_line_help = true)]
 struct Args {
     #[command(subcommand)]
